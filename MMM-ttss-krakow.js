@@ -5,7 +5,7 @@ const stopsData = new Map()
 Module.register("MMM-ttss-krakow",{
 
 	defaults: {
-		text: "Hello World 111!",
+		minutesDelay: 0
 	},
 
 	// Define required scripts.
@@ -31,8 +31,13 @@ Module.register("MMM-ttss-krakow",{
 
 	getDom: function() {
 		var table = document.createElement("table");
+		table.className += "small"; // core style class
+
+		var globalConfig = this.config;
 
 		this.config.stops.forEach(stopConfig => {
+
+			var minutesDelay = (stopConfig.minutesDelay === undefined) ? globalConfig.minutesDelay : stopConfig.minutesDelay;
 
 			var key = String([stopConfig.stopId, stopConfig.type]);
 			var stop = stopsData.get(key);
@@ -47,6 +52,7 @@ Module.register("MMM-ttss-krakow",{
 
 				stop.actual
 					.filter(item => item.actualRelativeTime >= 0)
+					.filter(item => item.actualRelativeTime >= minutesDelay * 60)
 					.forEach(actual => {
 						var timeMinutes = Math.floor(actual.actualRelativeTime / 60);
 						var paragraph = document.createElement("p");
