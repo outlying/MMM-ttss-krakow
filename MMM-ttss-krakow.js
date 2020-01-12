@@ -30,7 +30,7 @@ Module.register("MMM-ttss-krakow",{
 	},
 
 	getDom: function() {
-		var wrapper = document.createElement("div");
+		var table = document.createElement("table");
 
 		this.config.stops.forEach(stopConfig => {
 
@@ -38,6 +38,13 @@ Module.register("MMM-ttss-krakow",{
 			var stop = stopsData.get(key);
 
 			if(stop) {
+
+				row = table.insertRow();
+				cell = row.insertCell();
+				cell.colSpan = 3;
+				cell.innerHTML = stop.stopName;
+				cell.style.textAlign = "left";
+
 				stop.actual
 					.filter(item => item.actualRelativeTime >= 0)
 					.forEach(actual => {
@@ -45,13 +52,20 @@ Module.register("MMM-ttss-krakow",{
 						var paragraph = document.createElement("p");
 						var text = document.createTextNode(actual.patternText + " " + actual.direction + " " + timeMinutes + " min"); 
 
-						paragraph.appendChild(text);
-	            		wrapper.appendChild(paragraph); 	
+						row = table.insertRow();
+
+						row.insertCell().innerHTML = actual.patternText;
+						
+						directionCell = row.insertCell();
+						directionCell.style.textAlign = "left";
+						directionCell.innerHTML = actual.direction;
+
+						row.insertCell().innerHTML = timeMinutes + " min";
 					});
 			}
 		});
 
-		return wrapper;
+		return table;
 	},
 
 	socketNotificationReceived(notification, data) {
