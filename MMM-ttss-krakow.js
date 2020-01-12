@@ -13,6 +13,12 @@ Module.register("MMM-ttss-krakow",{
 		return ["moment.js"];
 	},
 
+	getStyles: function() {
+		return [
+			this.file('ttss-krakow.css')
+		]
+	},
+
 	// Start all inits
 	start: function() {
 		Log.info("Starting module: " + this.name);
@@ -31,7 +37,7 @@ Module.register("MMM-ttss-krakow",{
 
 	getDom: function() {
 		var table = document.createElement("table");
-		table.className += "small"; // core style class
+		table.className = "small"; // core style class
 
 		var globalConfig = this.config;
 
@@ -53,20 +59,23 @@ Module.register("MMM-ttss-krakow",{
 				stop.actual
 					.filter(item => item.actualRelativeTime >= 0)
 					.filter(item => item.actualRelativeTime >= minutesDelay * 60)
-					.forEach(actual => {
+					.forEach(function(actual, i, array) {
 						var timeMinutes = Math.floor(actual.actualRelativeTime / 60);
-						var paragraph = document.createElement("p");
-						var text = document.createTextNode(actual.patternText + " " + actual.direction + " " + timeMinutes + " min"); 
 
 						row = table.insertRow();
+						row.style.opacity = 1 - (i / array.length);
 
-						row.insertCell().innerHTML = actual.patternText;
+						lineCell = row.insertCell();
+						lineCell.className = "line bright";
+						lineCell.innerHTML = actual.patternText;
 						
 						directionCell = row.insertCell();
 						directionCell.style.textAlign = "left";
 						directionCell.innerHTML = actual.direction;
 
-						row.insertCell().innerHTML = timeMinutes + " min";
+						timeCell = row.insertCell();
+						timeCell.className = "time bright";
+						timeCell.innerHTML = timeMinutes + " min";
 					});
 			}
 		});
