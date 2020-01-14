@@ -2,10 +2,20 @@
 
 const stopsData = new Map()
 
+function groupItemsBy(arr, groupByKeyFn ) {
+	return arr.reduce( (acc, c) => {
+		var key = groupByKeyFn(c);
+		acc[key] = acc[key] || [];
+		acc[key].push(c)
+		return acc;
+	}, [])
+}
+
 Module.register("MMM-ttss-krakow",{
 
 	defaults: {
-		minutesDelay: 0
+		minutesMin: 0,
+		minutesMax: Number.MAX_SAFE_INTEGER
 	},
 
 	// Define required scripts.
@@ -43,22 +53,40 @@ Module.register("MMM-ttss-krakow",{
 
 		this.config.stops.forEach(stopConfig => {
 
-			var minutesDelay = (stopConfig.minutesDelay === undefined) ? globalConfig.minutesDelay : stopConfig.minutesDelay;
+			var minutesMin = (stopConfig.minutesMin === undefined) ? globalConfig.minutesMin : stopConfig.minutesMin;
+			var minutesMax = (stopConfig.minutesMax === undefined) ? globalConfig.minutesMax : stopConfig.minutesMax;
+			var groupBy = (stopConfig.groupBy === undefined) ? globalConfig.groupBy : stopConfig.groupBy;
 
 			var key = String([stopConfig.stopId, stopConfig.type]);
-			var stop = stopsData.get(key);
+			var departures = stopsData.get(key);
 
-			if(stop) {
+			if(departures) {
 
 				row = table.insertRow();
 				cell = row.insertCell();
 				cell.colSpan = 3;
-				cell.innerHTML = stop.stopName;
+				cell.innerHTML = departures.stopName;
 				cell.style.textAlign = "left";
 
-				stop.actual
+				groupBy = "direction"
+				groups = groupItemsBy(departures.actual, item => {
+					if(groupBy === undefined) {
+						return undefined ;
+					} else if(groupBy === "direction") {
+						return item.direction;
+					}
+				});
+
+				Object.keys(groups).forEach(function(groupKey) {
+					group = groups[groupKey];
+
+					
+				})
+
+				departures.actual
 					.filter(item => item.actualRelativeTime >= 0)
-					.filter(item => item.actualRelativeTime >= minutesDelay * 60)
+					.filter(item => item.actualRelativeTime >= minutesMin * 60)
+					.filter(item => item.actualRelativeTime <= minutesMax * 60)
 					.forEach(function(actual, i, array) {
 						var timeMinutes = Math.floor(actual.actualRelativeTime / 60);
 
