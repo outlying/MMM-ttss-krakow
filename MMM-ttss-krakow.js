@@ -18,7 +18,8 @@ Module.register("MMM-ttss-krakow",{
 		minutesMax: Number.MAX_SAFE_INTEGER,
 		departuresMin: 0,
 		departuresMax: Number.MAX_SAFE_INTEGER,
-		itemsMin: 0
+		itemsMin: 0,
+		itemsMax: Number.MAX_SAFE_INTEGER
 	},
 
 	// Define required scripts.
@@ -84,20 +85,20 @@ Module.register("MMM-ttss-krakow",{
 				groups = groupItemsBy(actuals, item => undefined);
 
 				Object.keys(groups).forEach(function(groupKey) {
-					groups[groupKey]
+
+					group = groups[groupKey];
+
+					filtered = group
 						.filter(item => item.actualRelativeTime >= 0)
 						.filter(item => item.actualRelativeTime >= minutesMin * 60)
 						.filter(item => item.actualRelativeTime <= minutesMax * 60)
-						.filter((item, index) => index < itemsMax)
-						.forEach(function(actual, i, array) {
+						.filter((item, index) => index < itemsMax);
+
+					filtered.forEach(function(actual, i, array) {
 							var timeMinutes = Math.floor(actual.actualRelativeTime / 60);
 
 							row = table.insertRow();
 							row.style.opacity = 1 - (i / array.length);
-
-							if(actual.patternText === undefined) {
-								row.style.opacity = 0;
-							}
 
 							lineCell = row.insertCell();
 							lineCell.className = "line bright";
@@ -111,6 +112,16 @@ Module.register("MMM-ttss-krakow",{
 							timeCell.className = "time bright";
 							timeCell.innerHTML = timeMinutes + " min";
 						});
+					
+					if(filtered.length < itemsMin) {
+						[...Array(itemsMin - filtered.length).keys()].forEach(item => {
+							emptyRow = table.insertRow();
+							emptyRow.style.opacity = 0;
+							emptyCell = emptyRow.insertCell();
+							emptyCell.colSpan = 3;
+							emptyCell.innerHTML = "XXX";
+						})
+					}
 				})
 			}
 		});
