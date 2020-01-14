@@ -15,7 +15,10 @@ Module.register("MMM-ttss-krakow",{
 
 	defaults: {
 		minutesMin: 0,
-		minutesMax: Number.MAX_SAFE_INTEGER
+		minutesMax: Number.MAX_SAFE_INTEGER,
+		departuresMin: 0,
+		departuresMax: Number.MAX_SAFE_INTEGER,
+		itemsMin: 0
 	},
 
 	// Define required scripts.
@@ -55,6 +58,8 @@ Module.register("MMM-ttss-krakow",{
 
 			var minutesMin = (stopConfig.minutesMin === undefined) ? globalConfig.minutesMin : stopConfig.minutesMin;
 			var minutesMax = (stopConfig.minutesMax === undefined) ? globalConfig.minutesMax : stopConfig.minutesMax;
+			var itemsMin = (stopConfig.itemsMin === undefined) ? globalConfig.itemsMin : stopConfig.itemsMin;
+			var itemsMax = (stopConfig.itemsMax === undefined) ? globalConfig.itemsMax : stopConfig.itemsMax;
 			var groupBy = (stopConfig.groupBy === undefined) ? globalConfig.groupBy : stopConfig.groupBy;
 
 			var key = String([stopConfig.stopId, stopConfig.type]);
@@ -68,43 +73,45 @@ Module.register("MMM-ttss-krakow",{
 				cell.innerHTML = departures.stopName;
 				cell.style.textAlign = "left";
 
-				groupBy = "direction"
-				groups = groupItemsBy(departures.actual, item => {
-					if(groupBy === undefined) {
-						return undefined ;
-					} else if(groupBy === "direction") {
-						return item.direction;
-					}
-				});
+				actuals = departures.actual;
+
+				if(actuals.length <= itemsMin){
+					[...Array(itemsMin - actuals.length).keys()].forEach(item => {
+						actuals.push({actualRelativeTime: minutesMin * 60});
+					})
+				}
+
+				groups = groupItemsBy(actuals, item => undefined);
 
 				Object.keys(groups).forEach(function(groupKey) {
-					group = groups[groupKey];
+					groups[groupKey]
+						.filter(item => item.actualRelativeTime >= 0)
+						.filter(item => item.actualRelativeTime >= minutesMin * 60)
+						.filter(item => item.actualRelativeTime <= minutesMax * 60)
+						.filter((item, index) => index < itemsMax)
+						.forEach(function(actual, i, array) {
+							var timeMinutes = Math.floor(actual.actualRelativeTime / 60);
 
-					
+							row = table.insertRow();
+							row.style.opacity = 1 - (i / array.length);
+
+							if(actual.patternText === undefined) {
+								row.style.opacity = 0;
+							}
+
+							lineCell = row.insertCell();
+							lineCell.className = "line bright";
+							lineCell.innerHTML = actual.patternText;
+							
+							directionCell = row.insertCell();
+							directionCell.style.textAlign = "left";
+							directionCell.innerHTML = actual.direction;
+
+							timeCell = row.insertCell();
+							timeCell.className = "time bright";
+							timeCell.innerHTML = timeMinutes + " min";
+						});
 				})
-
-				departures.actual
-					.filter(item => item.actualRelativeTime >= 0)
-					.filter(item => item.actualRelativeTime >= minutesMin * 60)
-					.filter(item => item.actualRelativeTime <= minutesMax * 60)
-					.forEach(function(actual, i, array) {
-						var timeMinutes = Math.floor(actual.actualRelativeTime / 60);
-
-						row = table.insertRow();
-						row.style.opacity = 1 - (i / array.length);
-
-						lineCell = row.insertCell();
-						lineCell.className = "line bright";
-						lineCell.innerHTML = actual.patternText;
-						
-						directionCell = row.insertCell();
-						directionCell.style.textAlign = "left";
-						directionCell.innerHTML = actual.direction;
-
-						timeCell = row.insertCell();
-						timeCell.className = "time bright";
-						timeCell.innerHTML = timeMinutes + " min";
-					});
 			}
 		});
 
