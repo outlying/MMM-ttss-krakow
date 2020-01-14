@@ -76,12 +76,6 @@ Module.register("MMM-ttss-krakow",{
 
 				actuals = departures.actual;
 
-				if(actuals.length <= itemsMin){
-					[...Array(itemsMin - actuals.length).keys()].forEach(item => {
-						actuals.push({actualRelativeTime: minutesMin * 60});
-					})
-				}
-
 				groups = groupItemsBy(actuals, item => undefined);
 
 				Object.keys(groups).forEach(function(groupKey) {
